@@ -12,7 +12,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /usr/src/app/target/release/mini-redis /app/sedi_microservice
+COPY --from=builder /usr/src/app/target/release/MiniRedis /app/sedi_microservice
 
 EXPOSE 3000
 
