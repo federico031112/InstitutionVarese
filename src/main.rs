@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet};
 use std::sync::RwLock;
 use std::fs::File;
 use std::io::{Read, Write};
-use axum::http::StatusCode;
+use axum::http::{StatusCode, HeaderMap};
 use serde::{Serialize, Deserialize};
 use axum::{
     routing::{get, post},
@@ -13,6 +13,8 @@ use axum::{
 use std::sync::Arc;
 use std::net::SocketAddr;
 use colored::{self, Colorize};
+
+const ADMIN_TOKEN: &str = "tokenadminsegreto131203";
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct SedeIstituzionale {
@@ -173,7 +175,15 @@ async fn get_sede_by_tipology (Path(tipology): Path<String>, State(db): State<Ar
     Json(db.search_by_tipology(tipology))
 }
 
-async fn create_sede (State(db): State<Arc<Db>>, Json(sede): Json<SedeIstituzionale>) -> Result<Json<String>, StatusCode> {
+async fn create_sede (headers: HeaderMap, State(db): State<Arc<Db>>, Json(sede): Json<SedeIstituzionale>) -> Result<Json<String>, StatusCode> {
+    if let Some(token) = headers.get("X-Admin-Token") {
+        if token != ADMIN_TOKEN {
+            return Err(StatusCode::UNAUTHORIZED); 
+        }
+    } else {
+        return Err(StatusCode::UNAUTHORIZED); 
+    }
+    
     let res = db.insert(sede);
     match res {
         Some(res) => {
@@ -188,7 +198,16 @@ async fn create_sede (State(db): State<Arc<Db>>, Json(sede): Json<SedeIstituzion
     
 }
 
-async fn remove_sede (State(db): State<Arc<Db>>, Path(id): Path<u32>) -> Result<Json<String>, StatusCode> {
+async fn remove_sede (headers: HeaderMap, State(db): State<Arc<Db>>, Path(id): Path<u32>) -> Result<Json<String>, StatusCode> {
+    if let Some(token) = headers.get("X-Admin-Token") {
+        if token != ADMIN_TOKEN {
+            return Err(StatusCode::UNAUTHORIZED); 
+        }
+    } else {
+        return Err(StatusCode::UNAUTHORIZED); 
+    }
+    
+    
     let res = db.remove(id);
     match res {
         Some(res) => {
